@@ -101,6 +101,7 @@ Untracked files will not be handed in.  Continue? [y/N]
 你可以使用<font color=red>make grade</font>来运行评分程序。TAs将使用与你本地相同的评分程序来评分。  
 
 ## Sleep  
+
 为Xv6实现Unix Sleep调用；你的Sleep应该能够暂停一段用户指定的ticks时长（tick是内核中定义的一个概念，代表两次时钟中断之间的时间长度）。你的答案应该实现在user/sleep.c  
 
 一些提示：  
@@ -113,13 +114,130 @@ Untracked files will not be handed in.  Continue? [y/N]
 
 从Xv6 shell运行程序：  
 
-$ make qemu  
-...  
-init: starting sh  
-$ sleep 10  
-(nothing happens for a little while)  
-$  
+      $ make qemu  
+      ...  
+      init: starting sh  
+      $ sleep 10  
+      (nothing happens for a little while)  
+      $  
 
 如果您的程序行为如上所示，那么你的答案是正确的  
 
-可选：编写一个 uptime 程序，使用 uptime 系统调用能够按ticks显示正常运行时间。  
+可选：编写一个 uptime 的调用程序，打印出uptime的值（tips：uptime是一个系统调用） 。  
+
+## pingpong  
+
+编写一个程序，该程序使用UNIX系统调用通过一对管道在两个进程之间``乒乓''一个字节，每个方向一个。父进程通过向byte_fd [1]写入字节来发送，而子进程通过从parent_fd [0]读取来接收字节。子进程从父进程收到一个字节后，通过写入child_fd [1] 响应，然后由父级读取。您的解决方案应该在文件user / pingpong.c中。  
+
+一些提示：  
+
+- 使用 pipe 创建管道  
+- 使用 fork 创建一个子进程  
+- 使用 read 读取管道，并使用 write 写入管道  
+
+从xv6 shell运行该程序，它将产生以下输出：  
+
+    $ make qemu  
+    ...  
+    init: starting sh  
+    $ pingpong  
+    4: received ping  
+    3: received pong  
+    
+
+如果您的程序行为如上所述，则您的解决方案是正确的。“:”之前的数字是打印输出的进程的进程ID。您可以通过调用系统调用getpid来获取进程ID  
+
+## primes  
+
+利用管道编写一个并发版本的筛素数程序,这个想法来自Unix pipe管道的创始人.[web](http://swtch.com/~rsc/thread/)此页中解释了如何去操作.你的答案应该写在user/primes.c  
+
+你的目标是使用 pipe 和 fork 去创建一个管道。 第一个进程将[2,35]输入进管道。对于每一个质数,您将安排创建一个进程从其左邻居读取在管道并写入其右邻居管道。因为xv6的文件描述符和进程数量是有限制的，所以第一个进程应该在写入35之后停止写入。  
+
+一些提示：  
+
+- 小心的关闭进程不需要的文件描述符，否则你的程序可能在第一个进程到达35之前耗尽xv6的资源  
+- 一旦第一个进程到达35，您就应该安排管道干净利落地终止，包括所有子进程（提示：关闭管道的写端时 read 将返回 EOF）。  
+- 直接往管道里写入32位 intS 而不是格式化的 ACSII I/O 是最简单的。  
+- 你应该根据需求在管道里创建进程  
+
+如果你的输入如下所示，那么你的答案就是正确的：  
+
+    $ make qemu  
+    ...  
+    init: starting sh  
+    $ primes  
+    prime 2  
+    prime 3  
+    prime 5  
+    prime 7  
+    prime 11  
+    prime 13  
+    prime 17  
+    prime 19  
+    prime 23  
+    prime 29  
+    prime 31  
+    $  
+    
+## find  
+
+编写UNIX查找程序的简单版本：在目录树中查找名称与参数字符串匹配的所有文件。 您的解决方案应该在文件user / find.c中。  
+
+一些提示：  
+
+- 查看user / ls.c以了解如何读取目录  
+- 使用递归来进入子目录  
+- 不要递归到“.” 和“..”  
+- 对文件系统的更改在qemu的运行中持续存在。 要获得干净的文件系统，请先运行 make clean，然后再make qemu  
+- 你需要使用C风格字符串。 查看K＆R（C book），例如5.5节  
+
+可选：支持使用正则表达式进行名称匹配。 grep.c 对正则表达式有一些原始支持。  
+
+如果产生以下输出（文件系统包含文件 a/b 时），则您的解决方案是正确的：  
+
+    $ make qemu  
+    ...  
+    init: starting sh  
+    $ mkdir a  
+    $ echo > a/b  
+    $ find . b  
+    ./a/b  
+    $  
+    
+## xargs  
+
+编写UNIX xargs程序的简单版本：从标准输入中读取每行并为每行运行一个命令，并将该行的结果作为参数提供给其他命令。 您的解决方案应该在文件user / xargs.c中。  
+
+下面的例子说明了xarg的行为:  
+
+    $ xargs echo bye  
+    hello too  
+    bye hello too  
+    ctrl-d  
+    $  
+
+一些提示：  
+
+使用fork和exec系统调用在输入的每一行上调用命令。 在父级中使用wait等待子级完成命令的运行。  
+从标准输入中读取一个字符，直到换行符（'\n'）。  
+kernel/param.h 中声明了 MAXARG ，如果您需要声明 argv ,这可能很有用。  
+对文件系统的更改在qemu的运行中持续存在。 要获得干净的文件系统，请先运行make clean，然后再进行qemu。  
+
+xargs, find, 和 grep 的结合:  
+
+  $ find . b | xargs grep hello  
+
+以上命令将会在每个拥有文件名为 b 的文件夹下运行 grep hello  
+
+运行 xargstest.sh 脚本来测试你的答案.如果你的答案像接下来输出的一样,那么你的答案就是正确的:  
+
+  $ make qemu  
+  ...  
+  init: starting sh  
+  $ sh < xargstest.sh  
+  $ $ $ $ $ $ hello  
+  hello  
+  hello  
+  $ $  
+
+您可能需要修复 find 程序中的错误。 输出中有很多 $ ，因为xv6 shell是很原始的，并且它不会意识到正在处理文件中的命令而不是控制台中的命令，它会为文件中的每个命令打印 $ 。本实验到此完成。 在实验室目录中，使用 git commit 提交更改，然后键入 make handin 提交代码。  
