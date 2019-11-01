@@ -76,9 +76,10 @@
 # 提交程序  
 
 你将使用[提交网站](https://6828.scripts.mit.edu/2019/handin.py/)来提交你的作业。在你提交作业或实验前，你需要从网站上申请一个API key。实验代码采用GNU Make规则来简化提交。在你最后的更改提交后,输入 make handin 提交你的实验。  
-$ git commit -am "ready to submit my lab"  
-[util c2e3c8b] ready to submit my lab  
- 2 files changed, 18 insertions(+), 2 deletions(-)  
+
+    $ git commit -am "ready to submit my lab"  
+    [util c2e3c8b] ready to submit my lab  
+    2 files changed, 18 insertions(+), 2 deletions(-)  
 
     $ make handin  
     git archive --prefix=util/ --format=tar HEAD | gzip >     util-handin.tar.gz  
