@@ -6,5 +6,5 @@ Lab的翻译都是我自己在学习过程中完成的,我尽量保持了Lab的�
 
 学习交流:zhaiqimingac@outlook.com
 
-ps:啥时候才能有工作啊😢 
+ps:奋斗的青春不留遗憾!
 
